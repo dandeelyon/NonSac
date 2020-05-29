@@ -1,0 +1,81 @@
+﻿Treatment,Day,Organism,Cells
+cntrl,1,AA,177200
+cntrl,1,HU,10000000
+cntrl,1,LB,40
+cntrl,1,LK,352800
+cntrl,1,LP,260
+cntrl,1,PDO,4560
+cntrl,1,PM,200
+cntrl,1,ZYGO,860
+non sac,1,AA,170400
+non sac,1,HU,3900000
+non sac,1,LB,1
+non sac,1,LK,186000
+non sac,1,LP,130
+non sac,1,PDO,5240
+non sac,1,PM,240
+non sac,1,ZYGO,580
+cntrl,4,AA,14120
+cntrl,4,HU,9300000
+cntrl,4,LB,1
+cntrl,4,LK,17160
+cntrl,4,LP,1
+cntrl,4,PDO,700
+cntrl,4,PM,70
+cntrl,4,ZYGO,260
+non sac,4,AA,19880
+non sac,4,HU,3700000
+non sac,4,LB,1
+non sac,4,LK,5600
+non sac,4,LP,1
+non sac,4,PDO,120
+non sac,4,PM,240
+non sac,4,ZYGO,100
+cntrl,6,AA,28520
+cntrl,6,HU,7800000
+cntrl,6,LB,930
+cntrl,6,LK,17400
+cntrl,6,LP,150
+cntrl,6,PDO,150
+cntrl,6,PM,1
+cntrl,6,ZYGO,280
+non sac,6,AA,25520
+non sac,6,HU,820000
+non sac,6,LB,7520
+non sac,6,LK,21600
+non sac,6,LP,1680
+non sac,6,PDO,850
+non sac,6,PM,1
+non sac,6,ZYGO,580
+cntrl,8,AA,39800
+cntrl,8,HU,1200000
+cntrl,8,LB,110
+cntrl,8,LK,1330
+cntrl,8,LP,30
+cntrl,8,PDO,20
+cntrl,8,PM,20
+cntrl,8,ZYGO,50
+non sac,8,AA,15220
+non sac,8,HU,964000
+non sac,8,LB,240
+non sac,8,LK,1030
+non sac,8,LP,30
+non sac,8,PDO,40
+non sac,8,PM,1
+non sac,8,ZYGO,30
+cntrl,15,AA,45400
+cntrl,15,HU,9780
+cntrl,15,LB,20
+cntrl,15,LK,210
+cntrl,15,LP,130
+cntrl,15,PDO,20
+cntrl,15,PM,1
+cntrl,15,ZYGO,1
+non sac,15,AA,29600
+non sac,15,HU,3320
+non sac,15,LB,1
+non sac,15,LK,420
+non sac,15,LP,90
+non sac,15,PDO,40
+non sac,15,PM,1
+non sac,15,ZYGO,1

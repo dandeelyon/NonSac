@@ -1,0 +1,467 @@
+---
+title: "__Non-_Saccharomyces_ Validation Study at University of California Davis__"
+output:
+  html_notebook: default
+  html_document:
+    df_print: paged
+  pdf_document: default
+  word_document: default
+---  
+***
+# Prepared by Daniel A. Dycus for LAFFORT
+# 50 g/hL of Egide versus 60 mg/L $\mathrm{SO_2}$  
+***  
+
+```{r Prepare Libraries Import Data, include=FALSE}
+if(!require(FSA)){install.packages("FSA")}  
+if(!require(ggplot2)){install.packages("ggplot2")} 
+if(!require(car)){install.packages("car")} 
+if(!require(multcompView)){install.packages("multcompView")}
+if(!require(lsmeans)){install.packages("lsmeans")} 
+if(!require(grid)){install.packages("grid")} 
+if(!require(nlme)){install.packages("nlme")}   
+if(!require(lme4)){install.packages("lme4")} 
+if(!require(lmerTest)){install.packages("lmerTest")}   
+if(!require(rcompanion)){install.packages("rcompanion")}   
+
+# Load libraries
+library(rcompanion)
+library(ggplot2)
+library(FSA)
+library(car)
+library(multcompView)
+library(lsmeans)
+library(grid)
+library(nlme)
+library(lme4)
+
+#Import Datasets
+
+Data=read.csv(file = "c:/users/ddycus/OneDrive - LAFFORT/Documents/R/UCD_Egide/ucd_data_raw1.csv", header = TRUE, fileEncoding = "UTF-8-BOM")
+SacData=read.csv(file = "c:/users/ddycus/OneDrive - LAFFORT/Documents/R/UCD_Egide/sacbenefit/sacbenefit.csv", header = TRUE, fileEncoding = "UTF-8-BOM")
+
+```
+# AA = Acetic Acid Bacteria  
+# HU = *Hanseniaspora uvarum*  
+# LB = *Lactobacillus brevis/hilgardii/fermentum*  
+# LK = *Lactobacillus kunkeei*  
+# LP = *Lactobacillus plantarum/casei/mali*  
+# PDO = *Pediococcus*   
+# PM = *Pichia membranifaciens/fermentans*  
+# ZYGO = *Zygosaccharomyces*  
+
+```{r}
+#Stuff for Peer Review
+#tiff("figure4New.tiff", units="in", width=7.25, height=6.5, res=600)
+
+#Create dataframe, check header, get data summary
+Data$Treatment = factor(Data$Treatment, levels = unique(Data$Treatment))
+Data$Organism = factor(Data$Organism, levels = unique(Data$Organism))
+headtail(Data)
+str(Data)
+summary(Data)
+Summarize(Cells ~ Treatment + Organism, data=Data, digits = 3)
+
+#Plot the mean value of Organisms vs. Treatment
+total=Summarize(Cells ~ Treatment + Organism, data=Data, digits = 3)
+a<-ggplot(data=total, aes(x=Treatment, y=mean, fill=Treatment))+ #create plot, use mean value for y
+  labs(y="cells/mL")+ #label axis
+  geom_bar(stat="identity")+ #geom_bar
+  theme_minimal()+ #minimal theme
+  ggtitle("Average Amount of Spoilage Organisms")+ #title
+  #Center the Title, change for guidelines per publication
+  theme(plot.title = element_text(hjust = 0.5, color = "black", size= 14))
+ 
+a + scale_fill_manual(values=c("#457b9d","#1d3557"))
+
+# Stuff for Peer Review
+# dev.off() 
+
+```
+
+# __Build Model__
+```{r}
+#Libraries
+library(multcompView)
+library(lsmeans)
+
+# ANOVA Type II
+model=lm(Cells ~ Treatment + Organism + Treatment:Organism, data=Data)
+Anova(model, type = "II")
+
+# Least Squares
+marginal = lsmeans(model,
+                   ~ Treatment)
+pairs(marginal,
+      adjust="tukey")
+
+#Treatment Significance
+CLD = cld.emmGrid(marginal,
+          alpha   = 0.1,
+          conf    = 0.95,
+          Letters = letters,        
+          adjust  = "tukey")  
+CLD
+
+#Letter Display for Organism, Note Hanseniaspora outlier, consider Monte Carlo, pub wants data raw.
+marginal = lsmeans(model,
+                   ~ Organism)
+pairs(marginal,
+      adjust="tukey")
+CLD = cld.emmGrid(marginal,
+          alpha   = 0.05,
+          Letters = letters,     
+          adjust  = "tukey")      
+CLD
+
+```
+
+# __Plot of Least Square Means Comparing Treatments__
+```{r}
+#Use CLD to illustrate difference between the treatments
+marginal = lsmeans(model,
+                   ~ Treatment)
+CLD = cld.emmGrid(marginal,
+          alpha   = 0.1,
+          conf    = 0.95,
+          Letters = letters,        
+          adjust  = "tukey")
+CLD$treatment = factor(CLD$Treatment,
+                        levels=c("Egide",
+                                 "Td/Mp"))
+CLD$.group=gsub(" ", "", CLD$.group)
+
+library(ggplot2)
+#Publication Requests
+#tiff("figure1old.tiff", units="in", width=7.25, height=6.5, res=600)
+ggplot(CLD, aes(x= Treatment, y = lsmean,label = .group)) +
+    geom_point(shape  = 15,
+               size   = 4) +
+    geom_errorbar(aes(ymin  =  lsmean+SE, 
+                      ymax  =  lsmean-SE), 
+                      width =  0.2,
+                      size  =  0.7) +
+
+    theme_bw() +
+    theme(plot.caption = element_text(hjust = 0.5),
+         plot.title = element_text("Plot Name", hjust = 0.5),
+         text = element_text(family="sans"), #Issue with font family, Editor and peer review doesn't want this graph. Making alternate.
+         panel.background = element_rect(fill = 'white', color = 'white')) +
+
+    ylab("Least Squares Mean\nWine Spoilage Organisms (cells / mL)") +
+    ggtitle("Least squares means of organisms in response to treatment")
+    geom_text(nudge_x = c(-.1,-.1),
+            nudge_y = c(-0.1,-0.1),
+            color   = "black")
+ # Pub stuff
+ # dev.off()
+```
+# __Plot for Organisms, Note Hanseniaspora__
+```{r}
+# Use Least Squares Means for Oranism. This information not making peer review. LSM used for internal validation only. Note Hanseniaspora 
+marginal = lsmeans(model,
+                   ~ Organism)
+CLD = cld.emmGrid(marginal,
+          alpha   = 0.1,
+          conf    = 0.95,
+          Letters = letters,        
+          adjust  = "tukey")
+CLD$Organism = factor(CLD$Organism,
+                        levels=c("AA",
+                                 "HU",
+                                 "LB",
+                                 "LK",
+                                 "LP",
+                                 "PDO",
+                                 "PM",
+                                 "ZYGO"))
+CLD$.group=gsub(" ", "", CLD$.group)
+
+ggplot(CLD,
+       aes(x     = Organism,
+           y     = lsmean,
+           label = .group)) +
+
+    geom_point(shape  = 15,
+               size   = 4) +
+
+    geom_errorbar(aes(ymin  =  lsmean+SE, 
+                      ymax  =  lsmean-SE), 
+                      width =  0.2,
+                      size  =  0.7) +
+
+    theme_bw() +
+    theme(axis.title   = element_text(face = "bold"),
+          axis.text    = element_text(face = "bold"),
+          plot.caption = element_text(hjust = 0)) +
+
+    ylab("Least Squares Mean\nWine Spoilage Organisms (cells / mL)") +
+
+  geom_text(nudge_x = c(.3,.3),
+            nudge_y = c(-3,-0.3,-0.3,-0.3,-0.3,-0.3,-0.3,-0.3),
+            color   = "black")
+
+```
+# __Means for Organisms and Treatments with Grouping Comparing Treatments__
+```{r}
+
+marginal = lsmeans(model,
+                   ~ Treatment + Organism)
+CLD = cld.emmGrid(marginal,
+          alpha   = 0.1,
+          Letters = letters,        
+          adjust  = "tukey")      
+### Order the levels for printing
+CLD$Treatment = factor(CLD$Treatment,
+                        levels=c("SO2",
+                                 "Td/Mp"))
+CLD$Organism = factor(CLD$Organism,
+                        levels=c("AA",
+                                 "HU",
+                                 "LB",
+                                 "LK",
+                                 "LP",
+                                 "PDO",
+                                 "PM",
+                                 "ZYGO"))
+CLD
+```
+# __Least Square Mean Plot for Wine Spoilage Organisms, HU interfering with baseline__
+```{r}
+# Build Plot, this did not make peer review 
+pd = position_dodge(0.6)    ### How much to jitter the points on the plot
+ggplot(CLD,
+       aes(x     = Treatment,
+           y     = lsmean,
+           color = Organism,
+           label = .group)) +
+    geom_point(shape  = 15,
+               size   = 4,
+             position = pd) +
+    geom_errorbar(aes(ymin  =  lsmean+SE, #per Lucy Joseph
+                      ymax  =  lsmean-SE), #per Lucy Joseph
+                      width =  0.2,
+                      size  =  0.7,
+                     position = pd) +
+    coord_cartesian(ylim=c(-1e6,1e7))+ #changing the boundaries
+    theme_bw() +
+    theme(axis.title   = element_text(face = "bold"),
+          axis.text    = element_text(face = "bold"),
+          plot.caption = element_text(hjust = 0)) +
+  ylab("Least square mean\nWine Spoilage Organisms (cells / mL)") +
+ 
+ # geom_text(nudge_x = c(-0.22, 0.08, -0.22, 0.22,
+  #                       0.08, 0.08, -0.08, -0.22,
+   #                      0.22, 0.22, -0.08, -0.08),
+    #        nudge_y = rep(270, 12),
+     #       color   = "black") +
+ 
+  scale_color_manual(values = c("magenta", "palevioletred", "skyblue", "lawngreen", "turquoise3","orchid1","deeppink1","maroon1" ))
+```
+
+# __Saccharomyces Log Change__
+```{r}
+
+#Set up Data Frame
+ df <- data.frame(Stage=rep(c("Cold Soak","Early","Mid","Late"), each=2),
+        Treatment=rep(c("SO2","Td/Mp"),2),
+        LogChange=c(3.29,5.42,1.32,1.58,-.60,-.85,-2.31,-2.38))
+head(df)
+# Set Fermentation Stage as a Factor
+df$Stage <- factor(df$Stage, levels=c("Cold Soak", "Early", "Mid", "Late"))
+# Pub Stuff
+# tiff("figure2.tiff", units="in", width=7.25, height=6.5, res=600)
+# Build the figure
+ggplot(data=df, aes(x=Stage, y=LogChange, fill=Treatment))+
+  ggtitle(~italic("S. cerevisae")~ "Log Change")+
+  theme(plot.title = element_text(hjust = 0.5),
+  plot.subtitle = element_text(hjust = 0.5),
+  text=element_text(family = "sans"),
+  panel.background = element_rect(fill='white', color = 'white'))+
+  geom_bar(stat="identity", position=position_dodge())+
+  scale_fill_manual(values = c("#457b9d","#1d3557"))
+ # Pub Stuff
+ # dev.off()
+```
+# __From Editor: Present Data Simply__
+```{r}
+#convert Day Column from numberic to factor variable
+Data$Day <- as.factor(Data$Day)
+head(Data)
+# Pub Stuff
+# tiff("figure1.tiff", units="in", width=7.25, height=6.5, res=600)
+p <- ggplot(Data, aes(x=Day, y=Cells, fill=Treatment))+ 
+  geom_col(linetype=0,color="black", position = position_dodge())+
+  scale_fill_manual(values = c("#457b9d","#1d3557"))+
+  ggtitle("Day of fermentation (cells/mL)")+
+  theme(plot.title = element_text(hjust = 0.5, color = "black", size = 12), 
+        text=element_text(family="sans"),
+        panel.background = element_rect(fill='white', color = 'white'))
+  
+  p + scale_x_discrete(labels=unique(Data$Day))+
+   labs(x = "Day of fermentation", y = "cells/mL")
+ # Pub Stuff
+ # dev.off()  
+
+```
+
+# __Seeking best visual representation of data__
+```{r}
+#Make a new figure for readers that is easier to read
+
+#Save the file in 600 DPI for Catalyst
+#tiff("figure6bad.tiff", units="in", width=7.25, height=6.5, res=600)
+
+#Read CSV and create df
+df <- read.csv(file = "c:/users/ddycus/OneDrive - LAFFORT/Documents/R/UCD_Egide/dammitjanet.csv", header = TRUE, fileEncoding = "UTF-8-BOM")
+
+#Stack it up
+p<-ggplot(Data, aes(x=Treatment, y=Cells, fill=Organism))+
+  geom_bar(position="stack", stat="identity")
+p  + scale_y_continuous(trans = 'log2')
+
+# Remove the tiff for Catalyst
+# dev.off()  
+
+```
+# __Additional Data Representation__
+```{r}
+#Make a new figure for Catalyst that is easier to read, stacked up don't look good, or change scale of the cells, log scale has worked before. Also was ineffective, shoot for one image with facets and main image.
+library(gridExtra)
+
+dammitjanet <- read.csv(file = "c:/users/ddycus/OneDrive - LAFFORT/Documents/R/UCD_Egide/dammitjanet.csv", header = TRUE, fileEncoding = "UTF-8-BOM")
+
+df <- data.frame(Organism=unique(dammitjanet$Organism), Cells=(dammitjanet$Cells))
+
+p1 <-ggplot(data=dammitjanet, aes(x=Treatment, y=Cells, fill=Treatment))+
+  geom_bar(stat="identity")+ #type of plot
+  labs(y="Sum of cells/mL")+ #y labels
+  theme_minimal()+
+  theme(legend.position = 'none')
+  ggtitle("Sum of Spoilage Organisms")+
+  #Center the Title, change for guidelines per ASEV
+  theme(plot.title = element_text(hjust = 0.5, color = "black", size= 14))
+p1 = p1 + scale_fill_manual(values=c("#457b9d","#1d3557"))
+p1
+
+
+```
+# __A faceted approach__
+```{r}
+library(stringr)
+library(plyr)
+library(dplyr)
+#Save the file in 600 DPI for Catalyst
+#tiff("figure7bad.tiff", units="in", width=7.25, height=6.5, res=600)
+
+#Wrap long labels
+var_width = 10
+dammitjanet1 <- mutate(dammitjanet, Organism = str_wrap(Organism, width = var_width))
+
+#Making second plot with facets
+p2 <- ggplot(dammitjanet1, aes(x=Treatment, y=Cells, factor(Organism), fill=Treatment))+
+  geom_bar(stat = "identity") + facet_wrap(~Organism, ncol = 2, scales = "free")+
+  theme(legend.position = "none")
+p2 = p2 + theme(axis.title.x = element_blank())+
+  scale_fill_manual(values=c("#457b9d","#1d3557"))
+
+grid.arrange(p1,p2, widths = c(1.5,2))
+# Remove the tiff for Catalyst
+# dev.off()
+```
+# __Specific Request__
+```{r}
+
+# Specific request for image
+# Save the file in 600 DPI for Catalyst
+# tiff("figure9bad.tiff", units="in", width=7.25, height=6.5, res=600)
+
+#Make a function to extrapolate the legend
+get_legend<-function(myggplot){
+  tmp <- ggplot_gtable(ggplot_build(myggplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)
+}
+
+#make the first one
+df1 <- data.frame(Organism=rep(c("Total Cells","Hanseniaspora uvarum"), each=2),
+        Treatment=rep(c("SO2","Td/Mp"),2),
+        Cells=c(29012585, 9880348, 28309780, 9387320))
+
+#make the second one
+df2 <- data.frame(Organism=rep(c("Acetic Acid Bacteria","Lactobacillus kunkeei"), each=2),
+                  Treatment=rep(c("SO2","Td/Mp"),2),
+                  Cells=c(305040, 260620, 388900, 214650))
+
+#make the third one
+df3 <- data.frame(Organism=rep(c("Pediococcus Species","Zygosaccharomyces","L. brevis/hilgardii/fermentum","Lactobacillus plantarum/casei/mali", "Pichia membranifaciens/fermentans"), each=2),
+                  Treatment=rep(c("SO2","Td/Mp"),5),
+                  Cells=c(5450, 6290, 1451, 1291, 1101, 7763, 571, 1931, 292, 483))
+
+#Wrap the long labels for each figure
+var_width = 15
+df1 <- mutate(df1, Organism = str_wrap(Organism, width = var_width))
+df2 <- mutate(df2, Organism = str_wrap(Organism, width = var_width))
+df3 <- mutate(df3, Organism = str_wrap(Organism, width = var_width))
+
+# Build the first figure
+p1 <- ggplot(data=df1, aes(x= reorder(Organism, -Cells), y=Cells, fill=Treatment))+
+ # ggtitle("Total cells and"~italic("Hanseniaspora uvarum"))+
+  theme(axis.title.x = element_blank(),
+    plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5),
+    text=element_text(family = "sans"),
+    panel.background = element_rect(fill='white', color = 'white'))+
+  geom_bar(stat="identity", position=position_dodge())+
+  labs(tag = 'A')+ #add letters to fulfill multipanel requirements from Catalyst
+  scale_fill_manual(values = c("#457b9d","#1d3557"))
+#Rip off the legend
+  legend <- get_legend(p1)
+p1 <- p1 +theme(legend.position="none")
+
+# Build the second figure
+p2 <- ggplot(data=df2, aes(x=reorder(Organism, -Cells), y=Cells, fill=Treatment))+
+  #ggtitle(~italic("Lactobacillus kunkeei")~"and Acetic Acid Bacteria")+
+  theme(axis.title.x = element_blank(),
+  legend.position="none",
+    plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5),
+    text=element_text(family = "sans"),
+    panel.background = element_rect(fill='white', color = 'white'))+
+  geom_bar(stat="identity", position=position_dodge())+
+  labs(tag = 'B')+ #add letters to fulfill multipanel requirements from Catalyst
+  scale_fill_manual(values = c("#457b9d","#1d3557"))
+p2
+
+# Build the third figure
+p3 <- ggplot(data=df3, aes(x=reorder(Organism, -Cells), y=Cells, fill=Treatment))+
+  #ggtitle(~italic("Pediococcus")~" species, Zygosaccharomyces, L. brevis/hilgardii/fermentum, and Lactobacillus plantarum/casei/mali")+
+  theme(axis.title.x = element_blank(), #no title
+  legend.position = "none", #no legend
+    plot.title = element_text(hjust = 0.5), #this can be removed but it's a req. for catalyst
+    plot.subtitle = element_text(hjust = 0.5), #this can be removed but it's a req. for catalyst
+    text=element_text(family = "sans"), #this can be removed but it's a req. for catalyst
+    panel.background = element_rect(fill='white', color = 'white'))+ #white background for the plot
+  geom_bar(stat="identity", position=position_dodge())+ #bar plot and spacing
+  labs(tag = 'C')+ #add letters to fulfill multipanel requirements from Catalyst
+  scale_fill_manual(values = c("#457b9d","#1d3557")) #blue colors for plotting
+p3
+
+#GROB Layout and Arrange in a Grid
+lay <- rbind(c(1,1,1,2,2,2,NA),
+             c(1,1,1,2,2,2,NA),
+             c(1,1,1,2,2,2,4),
+             c(1,1,1,2,2,2,4),
+             c(3,3,3,3,3,3,NA),
+             c(3,3,3,3,3,3,NA))
+
+#Arrange the images using the layout, add the title, add legend
+title1=textGrob("Organismal Response to Treatment")
+  theme(element_text(family = "sans"))
+grid.arrange(p1,p2,p3,legend, layout_matrix=lay, top=title1)
+
+
+# Remove the tiff for Catalyst
+# dev.off()
+```
