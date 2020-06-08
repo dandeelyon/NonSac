@@ -9,7 +9,7 @@ output:
 ---  
 ***
 # Prepared by Daniel A. Dycus for LAFFORT
-# 50 g/hL of Egide versus 60 mg/L $\mathrm{SO_2}$  
+# Egide versus $\mathrm{SO_2}$  
 ***  
 
 ```{r Prepare Libraries Import Data, include=FALSE}
@@ -313,7 +313,7 @@ p <- ggplot(Data, aes(x=Day, y=Cells, fill=Treatment))+
 #tiff("figure6bad.tiff", units="in", width=7.25, height=6.5, res=600)
 
 #Read CSV and create df
-df <- read.csv(file = "c:/users/ddycus/OneDrive - LAFFORT/Documents/R/UCD_Egide/dammitjanet.csv", header = TRUE, fileEncoding = "UTF-8-BOM")
+df <- read.csv(file = "c:/users/ddycus/OneDrive - LAFFORT/Documents/R/UCD_Egide/dang.csv", header = TRUE, fileEncoding = "UTF-8-BOM")
 
 #Stack it up
 p<-ggplot(Data, aes(x=Treatment, y=Cells, fill=Organism))+
@@ -329,11 +329,11 @@ p  + scale_y_continuous(trans = 'log2')
 #Make a new figure for Catalyst that is easier to read, stacked up don't look good, or change scale of the cells, log scale has worked before. Also was ineffective, shoot for one image with facets and main image.
 library(gridExtra)
 
-dammitjanet <- read.csv(file = "c:/users/ddycus/OneDrive - LAFFORT/Documents/R/UCD_Egide/dammitjanet.csv", header = TRUE, fileEncoding = "UTF-8-BOM")
+dang <- read.csv(file = "c:/users/ddycus/OneDrive - LAFFORT/Documents/R/UCD_Egide/dang.csv", header = TRUE, fileEncoding = "UTF-8-BOM")
 
-df <- data.frame(Organism=unique(dammitjanet$Organism), Cells=(dammitjanet$Cells))
+df <- data.frame(Organism=unique(dang$Organism), Cells=(dang$Cells))
 
-p1 <-ggplot(data=dammitjanet, aes(x=Treatment, y=Cells, fill=Treatment))+
+p1 <-ggplot(data=dang, aes(x=Treatment, y=Cells, fill=Treatment))+
   geom_bar(stat="identity")+ #type of plot
   labs(y="Sum of cells/mL")+ #y labels
   theme_minimal()+
@@ -356,10 +356,10 @@ library(dplyr)
 
 #Wrap long labels
 var_width = 10
-dammitjanet1 <- mutate(dammitjanet, Organism = str_wrap(Organism, width = var_width))
+dingdang <- mutate(dang, Organism = str_wrap(Organism, width = var_width))
 
 #Making second plot with facets
-p2 <- ggplot(dammitjanet1, aes(x=Treatment, y=Cells, factor(Organism), fill=Treatment))+
+p2 <- ggplot(dingdang, aes(x=Treatment, y=Cells, factor(Organism), fill=Treatment))+
   geom_bar(stat = "identity") + facet_wrap(~Organism, ncol = 2, scales = "free")+
   theme(legend.position = "none")
 p2 = p2 + theme(axis.title.x = element_blank())+
