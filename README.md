@@ -13,6 +13,6 @@ It also contains several data sets which are raw or normalized, and referenced i
 
 Other files which were used in the exploration of the data set are also included. 
 
-The data is provided as open source to illustrate and provide an open frame work for collaboration according to the creative commons licensing associated with this publication. Please enjoy contact me if you have any questions. 
+The data is provided as open source to illustrate and provide an open frame work for collaboration according to the creative commons licensing associated with this publication. Please enjoy and contact me if you have any questions. 
 
 daniel.dycus ***@*** laffort.com
